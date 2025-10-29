@@ -24,10 +24,15 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
+      args:
+        BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-production-secret-key-min-32-chars-change-me-please}
+        BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+        DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/appdb}
     container_name: app-template-app
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/appdb
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-production-secret-key-min-32-chars-change-me-please}
       BETTER_AUTH_URL: http://localhost:3000
       NODE_ENV: production
     ports:

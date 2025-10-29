@@ -10,11 +10,20 @@ RUN npm ci
 
 # Builder stage
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+
+# Accept build arguments
+ARG BETTER_AUTH_SECRET
+ARG BETTER_AUTH_URL=http://localhost:3000
+ARG DATABASE_URL
 
 # Set build-time environment variables
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+ENV BETTER_AUTH_URL=${BETTER_AUTH_URL}
+ENV DATABASE_URL=${DATABASE_URL}
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
 # Build the application
 RUN npm run build

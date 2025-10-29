@@ -78,12 +78,17 @@ npm run dev
 To run everything in Docker:
 
 ```bash
+# Set required environment variables
+export BETTER_AUTH_SECRET="your-production-secret-min-32-chars-long"
+
 # Build and start all services
 docker-compose up --build
 
 # Or run in detached mode
 docker-compose up -d --build
 ```
+
+**Important**: The `BETTER_AUTH_SECRET` must be at least 32 characters long for production builds.
 
 ### Stop Services
 
@@ -114,12 +119,23 @@ Installs only production dependencies.
 
 ```dockerfile
 FROM base AS builder
+
+# Accept build arguments
+ARG BETTER_AUTH_SECRET
+ARG BETTER_AUTH_URL=http://localhost:3000
+ARG DATABASE_URL
+
+# Set as environment variables for build
+ENV BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+ENV BETTER_AUTH_URL=${BETTER_AUTH_URL}
+ENV DATABASE_URL=${DATABASE_URL}
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 ```
 
-Builds the Next.js application.
+Builds the Next.js application. Build arguments are required because Next.js evaluates environment variables during the build process for static optimization and server-side code bundling.
 
 ### Stage 3: Production
 
@@ -145,8 +161,13 @@ Final production image:
 
 ### Build Production Image
 
+When building the Docker image, you must provide required environment variables as build arguments:
+
 ```bash
-docker build -t app-template:latest .
+docker build \
+  --build-arg BETTER_AUTH_SECRET="your-production-secret-min-32-chars-long" \
+  --build-arg DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  -t app-template:latest .
 ```
 
 ### Build with Cache
@@ -154,7 +175,11 @@ docker build -t app-template:latest .
 Docker BuildKit automatically caches layers:
 
 ```bash
-docker build --cache-from app-template:latest -t app-template:latest .
+docker build \
+  --build-arg BETTER_AUTH_SECRET="your-production-secret-min-32-chars-long" \
+  --build-arg DATABASE_URL="postgresql://user:pass@host:5432/db" \
+  --cache-from app-template:latest \
+  -t app-template:latest .
 ```
 
 ### Multi-Platform Build
