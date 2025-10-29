@@ -57,7 +57,7 @@ describe('User Workflow Integration Tests', () => {
         mockDatabase.set(id, user);
         return user;
       }),
-      updateUser: vi.fn(async (id: string, data: Record<string, unknown>) => {
+      updateUser: vi.fn(async (id: string, data: Partial<{ name: string; email: string; image: string | null; emailVerified: boolean }>) => {
         const user = mockDatabase.get(id);
         if (!user) return null;
         const updatedUser = {

@@ -37,7 +37,7 @@ describe('SignUpForm', () => {
   it('should display error message on failed sign-up', async () => {
     const errorMessage = 'Email already exists';
     vi.mocked(authClient.signUp.email).mockResolvedValue({
-      error: { message: errorMessage } as Error,
+      error: { message: errorMessage },
       data: null,
     });
 

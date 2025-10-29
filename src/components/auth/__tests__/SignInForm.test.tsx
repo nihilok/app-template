@@ -36,7 +36,7 @@ describe('SignInForm', () => {
   it('should display error message on failed sign-in', async () => {
     const errorMessage = 'Invalid credentials';
     vi.mocked(authClient.signIn.email).mockResolvedValue({
-      error: { message: errorMessage } as Error,
+      error: { message: errorMessage },
       data: null,
     });
 
