@@ -5,11 +5,6 @@ Thank you for your interest in contributing! This document provides guidelines a
 ## Getting Started
 
 1. **Fork the repository**
-<<<<<<< HEAD
-=======
-   <!-- Replace 'nihilok/app-template' with your repository name if you have customized this template -->
-   <!-- Replace 'nihilok/app-template' with your repository name if you have customized this template -->
->>>>>>> e31498b (Update CONTRIBUTING.md)
    ```bash
    # Replace 'nihilok/app-template' with your repository name if you have customized this template
    gh repo fork nihilok/app-template
