@@ -2,7 +2,26 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateUserUseCase } from '@/use-cases/user/create-user.use-case';
 import { GetUserUseCase } from '@/use-cases/user/get-user.use-case';
 import { UpdateUserUseCase } from '@/use-cases/user/update-user.use-case';
+import { UpdateUserInput } from '@/domain/user.types';
 import { UserRepository } from '@/infrastructure/repositories/user.repository';
+
+// Type aliases for test mock data
+type MockUser = {
+  id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+  emailVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+};
+
+type CreateUserData = {
+  email: string;
+  name: string | null;
+  image: string | null;
+};
 
 /**
  * Integration tests for user workflow
@@ -15,16 +34,7 @@ describe('User Workflow Integration Tests', () => {
   let updateUserUseCase: UpdateUserUseCase;
 
   // In-memory storage for testing
-  const mockDatabase = new Map<string, {
-    id: string;
-    email: string;
-    name: string | null;
-    image: string | null;
-    emailVerified: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt: Date | null;
-  }>();
+  const mockDatabase = new Map<string, MockUser>();
   let idCounter = 1;
 
   beforeEach(() => {
@@ -42,7 +52,7 @@ describe('User Workflow Integration Tests', () => {
           (user) => user.email === email && !user.deletedAt
         ) || null;
       }),
-      createUser: vi.fn(async (data: { email: string; name: string | null; image: string | null }) => {
+      createUser: vi.fn(async (data: CreateUserData) => {
         const id = String(idCounter++);
         const user = {
           id,
@@ -57,7 +67,7 @@ describe('User Workflow Integration Tests', () => {
         mockDatabase.set(id, user);
         return user;
       }),
-      updateUser: vi.fn(async (id: string, data: Partial<{ name: string; email: string; image: string | null; emailVerified: boolean }>) => {
+      updateUser: vi.fn(async (id: string, data: UpdateUserInput) => {
         const user = mockDatabase.get(id);
         if (!user) return null;
         const updatedUser = {
