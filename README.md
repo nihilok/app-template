@@ -18,42 +18,23 @@ A production-ready NextJS 16 template with PostgreSQL, Better Auth, and Domain-D
 
 ## Quick Start
 
-### Prerequisites
+📖 **See the [Quick Start Guide](./docs/quick-start.md) for detailed step-by-step instructions.**
 
-- Node.js 20+
-- Docker and Docker Compose
-- npm or yarn
+### TL;DR
 
-### Installation
-
-1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd app-template
-```
-
-2. Install dependencies:
-```bash
+# 1. Install dependencies
 npm install
-```
 
-3. Set up environment variables:
-```bash
+# 2. Set up environment
 cp .env.example .env.local
-```
 
-4. Start the database:
-```bash
+# 3. Start PostgreSQL
 docker-compose up postgres -d
-```
 
-5. Run database migrations:
-```bash
 npm run db:push
-```
 
-6. Start the development server:
-```bash
+# 5. Start development
 npm run dev
 ```
 
@@ -117,12 +98,18 @@ This template follows Domain-Driven Design (DDD) principles with a functional ap
 
 ## Documentation
 
-- [Database Schema](./src/infrastructure/database/schema/README.md)
-- [Soft Delete Pattern](./src/infrastructure/database/README.md)
-- [Use Cases](./src/use-cases/README.md)
-- [Authentication](./src/lib/auth/README.md)
-- [Docker Setup](./docs/docker.md)
-- [Testing Guide](./docs/testing.md)
+### Getting Started
+- [Quick Start Guide](./docs/quick-start.md) - Get running in 5 minutes
+- [Architecture Overview](./docs/architecture.md) - Understand the DDD design
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+
+### Guides
+- [Authentication](./src/lib/auth/README.md) - Better Auth setup and usage
+- [Database](./src/infrastructure/database/README.md) - Drizzle ORM and soft-delete pattern
+- [Database Schema](./src/infrastructure/database/schema/README.md) - Schema definitions
+- [Use Cases](./src/use-cases/README.md) - Business logic layer
+- [Docker Setup](./docs/docker.md) - Development and production Docker
+- [Testing Guide](./docs/testing.md) - Testing strategy and examples
 
 ## Available Scripts
 
