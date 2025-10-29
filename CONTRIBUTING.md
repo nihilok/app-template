@@ -11,6 +11,7 @@ Thank you for your interest in contributing! This document provides guidelines a
    <!-- Replace 'nihilok/app-template' with your repository name if you have customized this template -->
 >>>>>>> e31498b (Update CONTRIBUTING.md)
    ```bash
+   # Replace 'nihilok/app-template' with your repository name if you have customized this template
    gh repo fork nihilok/app-template
    ```
 
@@ -433,6 +434,8 @@ describe('MyFeature', () => {
 ```
 
 ## Getting Help
+
+> **Note:** Replace `nihilok/app-template` with your actual repository name in the URLs below after creating your project from this template.
 
 - **Questions**: Open a [Discussion](https://github.com/nihilok/app-template/discussions)
 - **Bugs**: Open an [Issue](https://github.com/nihilok/app-template/issues)

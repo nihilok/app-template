@@ -361,7 +361,9 @@ app-template/
 ## Getting Help
 
 - 📚 [Full Documentation](../README.md)
-- 💬 [GitHub Discussions](https://github.com/nihilok/app-template/discussions)
-- 🐛 [Report Issues](https://github.com/nihilok/app-template/issues)
+- 💬 [GitHub Discussions](https://github.com/<your-github-username>/<your-repo-name>/discussions)
+- 🐛 [Report Issues](https://github.com/<your-github-username>/<your-repo-name>/issues)
+
+> **Note:** Replace the above GitHub URLs with your actual repository links after creating your project from this template.
 
 Happy coding! 🎉
