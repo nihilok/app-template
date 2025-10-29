@@ -1,18 +1,16 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateUserUseCase } from '@/use-cases/user/create-user.use-case';
 import { UserRepository } from '@/infrastructure/repositories/user.repository';
 
-// Mock the repository
-jest.mock('@/infrastructure/repositories/user.repository');
-
 describe('CreateUserUseCase', () => {
   let createUserUseCase: CreateUserUseCase;
-  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockUserRepository: UserRepository;
 
   beforeEach(() => {
     mockUserRepository = {
-      findByEmail: jest.fn(),
-      createUser: jest.fn(),
-    } as jest.Mocked<UserRepository>;
+      findByEmail: vi.fn(),
+      createUser: vi.fn(),
+    } as unknown as UserRepository;
 
     createUserUseCase = new CreateUserUseCase(mockUserRepository);
   });

@@ -53,6 +53,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/appdb_test
           BETTER_AUTH_SECRET: test-secret-key-min-32-chars-long-for-ci
           BETTER_AUTH_URL: http://localhost:3000
+          NODE_ENV: test
 
       - name: Build application
         run: npm run build
