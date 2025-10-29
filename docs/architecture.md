@@ -466,41 +466,85 @@ const repo = new UserRepository(db);
 ### 1. Define Domain Types
 
 ```typescript
-// src/domain/post.types.ts
-export const CreatePostSchema = z.object({
-  title: z.string(),
-  content: z.string(),
+// src/domain/role.types.ts
+export const CreateRoleSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  groupId: z.string().uuid(),
+});
+
+export const AssignPermissionSchema = z.object({
+  roleId: z.string().uuid(),
+  permissionId: z.string().uuid(),
 });
 ```
 
 ### 2. Create Database Schema
 
 ```typescript
-// src/infrastructure/database/schema/posts.ts
-export const posts = pgTable('posts', {
+// src/infrastructure/database/schema/roles.ts
+export const roles = pgTable('roles', {
   id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  content: text('content'),
+  name: text('name').notNull(),
+  description: text('description'),
+  groupId: uuid('group_id')
+    .notNull()
+    .references(() => groups.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
+});
+
+export const permissions = pgTable('permissions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull().unique(),
+  resource: text('resource').notNull(),
+  action: text('action').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
+});
+
+export const rolePermissions = pgTable('role_permissions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  roleId: uuid('role_id')
+    .notNull()
+    .references(() => roles.id, { onDelete: 'cascade' }),
+  permissionId: uuid('permission_id')
+    .notNull()
+    .references(() => permissions.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 ```
 
 ### 3. Create Repository
 
 ```typescript
-// src/infrastructure/repositories/post.repository.ts
-export class PostRepository extends BaseRepository<typeof posts> {
-  // Add custom queries
+// src/infrastructure/repositories/role.repository.ts
+export class RoleRepository extends BaseRepository<typeof roles> {
+  async findByGroup(groupId: string): Promise<Role[]> {
+    return await this.db
+      .select()
+      .from(roles)
+      .where(eq(roles.groupId, groupId));
+  }
+  
+  async assignPermission(roleId: string, permissionId: string): Promise<void> {
+    await this.db.insert(rolePermissions).values({ roleId, permissionId });
+  }
 }
 ```
 
 ### 4. Create Use Cases
 
 ```typescript
-// src/use-cases/post/create-post.use-case.ts
-export class CreatePostUseCase {
-  execute(input: CreatePostInput): Promise<Post> {
-    // Implementation
+// src/use-cases/role/create-role.use-case.ts
+export class CreateRoleUseCase {
+  constructor(private readonly roleRepository: RoleRepository) {}
+  
+  async execute(input: CreateRoleInput): Promise<Role> {
+    const validatedData = CreateRoleSchema.parse(input);
+    return await this.roleRepository.create(validatedData);
   }
 }
 ```
@@ -508,9 +552,13 @@ export class CreatePostUseCase {
 ### 5. Create API Routes
 
 ```typescript
-// src/app/api/posts/route.ts
+// src/app/api/roles/route.ts
 export async function POST(request: NextRequest) {
-  // Implementation
+  const body = await request.json();
+  const roleRepository = new RoleRepository(db);
+  const createRoleUseCase = new CreateRoleUseCase(roleRepository);
+  const role = await createRoleUseCase.execute(body);
+  return NextResponse.json(role, { status: 201 });
 }
 ```
 

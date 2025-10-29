@@ -163,20 +163,23 @@ See [Architecture Guide](./docs/architecture.md) for details.
 Extend `BaseRepository` for new entities:
 
 ```typescript
-export class PostRepository extends BaseRepository<typeof posts> {
+export class RoleRepository extends BaseRepository<typeof roles> {
   constructor(db: Database) {
-    super(db, posts);
+    super(db, roles);
   }
 
   // Add custom methods
-  async findBySlug(slug: string): Promise<Post | null> {
+  async findByGroup(groupId: string): Promise<Role[]> {
     const results = await this.db
       .select()
-      .from(posts)
-      .where(eq(posts.slug, slug))
-      .limit(1);
+      .from(roles)
+      .where(eq(roles.groupId, groupId));
     
-    return results[0] || null;
+    return results;
+  }
+  
+  async assignPermission(roleId: string, permissionId: string): Promise<void> {
+    await this.db.insert(rolePermissions).values({ roleId, permissionId });
   }
 }
 ```

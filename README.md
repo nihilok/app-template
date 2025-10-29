@@ -106,6 +106,7 @@ This template follows Domain-Driven Design (DDD) principles with a functional ap
 
 ### Guides
 - [Authentication](./src/lib/auth/README.md) - Better Auth setup and usage
+- [RBAC System](./docs/rbac.md) - Role-Based Access Control implementation
 - [Database](./src/infrastructure/database/README.md) - Drizzle ORM and soft-delete pattern
 - [Database Schema](./src/infrastructure/database/schema/README.md) - Schema definitions
 - [Use Cases](./src/use-cases/README.md) - Business logic layer

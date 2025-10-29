@@ -2,3 +2,8 @@ export * from './users';
 export * from './sessions';
 export * from './accounts';
 export * from './verification-tokens';
+export * from './groups';
+export * from './roles';
+export * from './permissions';
+export * from './role-permissions';
+export * from './user-roles';

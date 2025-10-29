@@ -88,7 +88,7 @@ userId: uuid('user_id')
 
 ### Naming Conventions
 
-- Table names: lowercase, plural (e.g., `users`, `posts`)
+- Table names: lowercase, plural (e.g., `users`, `roles`, `permissions`)
 - Column names: snake_case (e.g., `created_at`, `email_verified`)
 - TypeScript types: PascalCase (e.g., `User`, `Session`)
 
@@ -101,23 +101,23 @@ userId: uuid('user_id')
 5. Add export to `index.ts`
 6. Generate migration with `npm run db:generate`
 
-Example:
+Example - RBAC Role Schema:
 
 ```typescript
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-export const posts = pgTable('posts', {
+export const roles = pgTable('roles', {
   id: uuid('id').defaultRandom().primaryKey(),
-  title: text('title').notNull(),
-  content: text('content'),
-  authorId: uuid('author_id')
+  name: text('name').notNull(),
+  description: text('description'),
+  groupId: uuid('group_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => groups.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
 });
 
-export type Post = typeof posts.$inferSelect;
-export type NewPost = typeof posts.$inferInsert;
+export type Role = typeof roles.$inferSelect;
+export type NewRole = typeof roles.$inferInsert;
 ```

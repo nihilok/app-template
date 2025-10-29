@@ -438,7 +438,9 @@ Clean database between tests:
 beforeEach(async () => {
   // Clean all tables
   await db.delete(users);
-  await db.delete(posts);
+  await db.delete(rolePermissions);
+  await db.delete(roles);
+  await db.delete(permissions);
   // ... other tables
 });
 ```
