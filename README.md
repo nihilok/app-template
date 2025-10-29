@@ -32,6 +32,7 @@ cp .env.example .env.local
 # 3. Start PostgreSQL
 docker-compose up postgres -d
 
+# 4. Push schema to database:
 npm run db:push
 
 # 5. Start development
