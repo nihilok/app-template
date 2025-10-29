@@ -83,10 +83,20 @@ describe('SignUpForm', () => {
     });
   });
 
+  // Extracted promise logic for mocking signUp.email
+  function mockSignUpEmailWithDelay() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: { user: { id: '1', email: 'test@example.com' } },
+          error: null,
+        });
+      }, 100);
+    });
+  }
+
   it('should show loading state during submission', async () => {
-    vi.mocked(authClient.signUp.email).mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }), 100))
-    );
+    vi.mocked(authClient.signUp.email).mockImplementation(mockSignUpEmailWithDelay);
 
     render(<SignUpForm />);
 
