@@ -78,10 +78,20 @@ describe('SignInForm', () => {
     });
   });
 
+  // Helper for delayed sign-in mock
+  function mockDelayedSignInSuccess() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          data: { user: { id: '1', email: 'test@example.com' } },
+          error: null,
+        });
+      }, 100);
+    });
+  }
+
   it('should show loading state during submission', async () => {
-    vi.mocked(authClient.signIn.email).mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }), 100))
-    );
+    vi.mocked(authClient.signIn.email).mockImplementation(mockDelayedSignInSuccess);
 
     render(<SignInForm />);
 
