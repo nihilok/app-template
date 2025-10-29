@@ -5,16 +5,18 @@ A production-ready NextJS 16 template with PostgreSQL, Better Auth, and Domain-D
 ## Features
 
 - 🚀 **NextJS 16** - Latest version with App Router and Server Actions
-- 🔐 **Better Auth** - Modern authentication solution
+- 🔐 **Better Auth** - Modern authentication solution with email/password and session management
 - 🗄️ **PostgreSQL** - Reliable relational database
 - 🔄 **Drizzle ORM** - Type-safe database queries
 - 🏗️ **DDD Architecture** - Clean separation of concerns with Repository, Use Case, and API layers
 - 🗑️ **Soft Delete** - Default soft-delete implementation across all entities
 - 🐳 **Docker** - Development and production containers
-- 🧪 **Testing** - Jest testing infrastructure
+- 🧪 **Vitest Testing** - Fast unit, component, and integration tests with Vitest and Testing Library
 - 🔄 **CI/CD** - GitHub Actions for automated testing and builds
 - 💅 **ESLint & Prettier** - Code quality and formatting
 - 📝 **TypeScript** - Full type safety
+- 🎨 **Landing Page** - Professional landing page showcasing the template
+- 🔒 **Auth Pages** - Ready-to-use sign-up, sign-in, and dashboard pages
 
 ## Quick Start
 
@@ -40,6 +42,33 @@ npm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) to see your app!
+
+## What's Included
+
+### Landing Page
+
+A professional landing page at `/` that showcases:
+- Hero section highlighting the template features
+- Feature cards for Next.js 16, Better Auth, PostgreSQL, DDD Architecture, Vitest, and Docker
+- Use case examples (SaaS, Internal Tools, APIs, E-commerce)
+- Clear call-to-action buttons
+
+### Authentication Flow
+
+Complete authentication system powered by Better Auth:
+
+- **Sign Up** (`/signup`) - User registration with name, email, and password
+- **Sign In** (`/signin`) - User authentication
+- **Dashboard** (`/dashboard`) - Protected page showing user profile
+- Session management and automatic redirects
+
+### Architecture
+
+The template demonstrates Domain-Driven Design with:
+- **Domain Layer** - Business types and validation
+- **Use Cases** - Application logic (create, read, update user)
+- **Repositories** - Data access with soft-delete support
+- **API Routes** - RESTful endpoints and auth handlers
 
 ## Project Structure
 
@@ -119,8 +148,10 @@ This template follows Domain-Driven Design (DDD) principles with a functional ap
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
-- `npm run test` - Run tests
+- `npm run test` - Run tests once
 - `npm run test:watch` - Run tests in watch mode
+- `npm run test:ui` - Run tests with Vitest UI
+- `npm run test:coverage` - Run tests with coverage report
 - `npm run db:generate` - Generate database migrations
 - `npm run db:migrate` - Run database migrations
 - `npm run db:push` - Push schema changes to database
@@ -171,6 +202,8 @@ docker-compose up --build app
 
 ## Testing
 
+This template includes comprehensive testing with Vitest:
+
 Run the test suite:
 
 ```bash
@@ -182,6 +215,26 @@ Run tests in watch mode:
 ```bash
 npm run test:watch
 ```
+
+Run tests with UI:
+
+```bash
+npm run test:ui
+```
+
+Run tests with coverage:
+
+```bash
+npm run test:coverage
+```
+
+### Test Coverage
+
+- **Unit Tests** - Use case and domain logic
+- **Component Tests** - React components with Testing Library
+- **Integration Tests** - Complete user workflows
+
+See the [Testing Guide](./docs/testing.md) for more details.
 
 ## CI/CD
 

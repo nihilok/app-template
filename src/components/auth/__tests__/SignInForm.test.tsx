@@ -36,9 +36,9 @@ describe('SignInForm', () => {
   it('should display error message on failed sign-in', async () => {
     const errorMessage = 'Invalid credentials';
     vi.mocked(authClient.signIn.email).mockResolvedValue({
-      error: { message: errorMessage },
+      error: { message: errorMessage } as Error,
       data: null,
-    } as any);
+    });
 
     render(<SignInForm />);
 
@@ -59,9 +59,9 @@ describe('SignInForm', () => {
 
   it('should redirect to dashboard on successful sign-in', async () => {
     vi.mocked(authClient.signIn.email).mockResolvedValue({
-      data: { user: { id: '1', email: 'test@example.com' } },
+      data: { user: { id: '1', email: 'test@example.com' } } as { user: { id: string; email: string } },
       error: null,
-    } as any);
+    });
 
     render(<SignInForm />);
 
@@ -80,7 +80,7 @@ describe('SignInForm', () => {
 
   it('should show loading state during submission', async () => {
     vi.mocked(authClient.signIn.email).mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ data: {}, error: null } as any), 100))
+      () => new Promise((resolve) => setTimeout(() => resolve({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }), 100))
     );
 
     render(<SignInForm />);

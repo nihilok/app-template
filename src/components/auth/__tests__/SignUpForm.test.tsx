@@ -37,9 +37,9 @@ describe('SignUpForm', () => {
   it('should display error message on failed sign-up', async () => {
     const errorMessage = 'Email already exists';
     vi.mocked(authClient.signUp.email).mockResolvedValue({
-      error: { message: errorMessage },
+      error: { message: errorMessage } as Error,
       data: null,
-    } as any);
+    });
 
     render(<SignUpForm />);
 
@@ -62,9 +62,9 @@ describe('SignUpForm', () => {
 
   it('should redirect to dashboard on successful sign-up', async () => {
     vi.mocked(authClient.signUp.email).mockResolvedValue({
-      data: { user: { id: '1', email: 'test@example.com' } },
+      data: { user: { id: '1', email: 'test@example.com' } } as { user: { id: string; email: string } },
       error: null,
-    } as any);
+    });
 
     render(<SignUpForm />);
 
@@ -85,7 +85,7 @@ describe('SignUpForm', () => {
 
   it('should show loading state during submission', async () => {
     vi.mocked(authClient.signUp.email).mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ data: {}, error: null } as any), 100))
+      () => new Promise((resolve) => setTimeout(() => resolve({ data: { user: { id: '1', email: 'test@example.com' } }, error: null }), 100))
     );
 
     render(<SignUpForm />);
