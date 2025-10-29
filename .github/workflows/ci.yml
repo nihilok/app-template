@@ -77,6 +77,8 @@ jobs:
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
+        env:
+          BETTER_AUTH_SECRET: testcisupersecretvalue32charsorlonger
         with:
           context: .
           push: false
