@@ -4,9 +4,9 @@ This document explains the testing strategy and practices for this application.
 
 ## Testing Stack
 
-- **Jest** - Testing framework
-- **Testing Library** - React component testing
-- **ts-jest** - TypeScript support for Jest
+- **Vitest** - Fast, modern testing framework with native ESM and TypeScript support
+- **Testing Library** - React component testing utilities
+- **jsdom** - DOM implementation for testing browser-like environments
 
 ## Test Structure
 
@@ -40,10 +40,18 @@ npm run test
 npm run test:watch
 ```
 
+### UI Mode
+
+Vitest provides a beautiful UI for running and debugging tests:
+
+```bash
+npm run test:ui
+```
+
 ### Coverage Report
 
 ```bash
-npm run test -- --coverage
+npm run test:coverage
 ```
 
 ### Run Specific Test
@@ -55,7 +63,7 @@ npm run test -- create-user.test.ts
 ### Run Tests Matching Pattern
 
 ```bash
-npm run test -- --testNamePattern="should create a user"
+npm run test -- -t "should create a user"
 ```
 
 ## Writing Tests
@@ -67,29 +75,23 @@ Use cases are the easiest to test because they're isolated from external depende
 Example:
 
 ```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CreateUserUseCase } from '@/use-cases/user/create-user.use-case';
 import { UserRepository } from '@/infrastructure/repositories/user.repository';
 
-// Mock the repository
-jest.mock('@/infrastructure/repositories/user.repository');
-
 describe('CreateUserUseCase', () => {
   let createUserUseCase: CreateUserUseCase;
-  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockUserRepository: UserRepository;
 
   beforeEach(() => {
     // Create mock repository
     mockUserRepository = {
-      findByEmail: jest.fn(),
-      createUser: jest.fn(),
-    } as any;
+      findByEmail: vi.fn(),
+      createUser: vi.fn(),
+    } as unknown as UserRepository;
 
     // Instantiate use case with mock
     createUserUseCase = new CreateUserUseCase(mockUserRepository);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   describe('execute', () => {
@@ -111,8 +113,8 @@ describe('CreateUserUseCase', () => {
         deletedAt: null,
       };
 
-      mockUserRepository.findByEmail.mockResolvedValue(null);
-      mockUserRepository.createUser.mockResolvedValue(expectedUser);
+      vi.mocked(mockUserRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockUserRepository.createUser).mockResolvedValue(expectedUser);
 
       // Act
       const result = await createUserUseCase.execute(input);
@@ -120,11 +122,7 @@ describe('CreateUserUseCase', () => {
       // Assert
       expect(result).toEqual(expectedUser);
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('test@example.com');
-      expect(mockUserRepository.createUser).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        name: 'Test User',
-        image: null,
-      });
+      expect(mockUserRepository.createUser).toHaveBeenCalled();
     });
 
     it('should throw error if user already exists', async () => {
@@ -134,7 +132,7 @@ describe('CreateUserUseCase', () => {
         name: 'Test User',
       };
 
-      mockUserRepository.findByEmail.mockResolvedValue({
+      vi.mocked(mockUserRepository.findByEmail).mockResolvedValue({
         id: '123',
         email: 'existing@example.com',
         name: 'Existing User',
@@ -243,50 +241,47 @@ describe('UserRepository', () => {
 });
 ```
 
-### API Route Tests
+### Integration Tests
 
-Test API routes using Next.js testing utilities:
+Test complete workflows with in-memory storage:
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { POST } from '@/app/api/users/route';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { CreateUserUseCase } from '@/use-cases/user/create-user.use-case';
+import { GetUserUseCase } from '@/use-cases/user/get-user.use-case';
+import { UpdateUserUseCase } from '@/use-cases/user/update-user.use-case';
 
-// Mock database
-jest.mock('@/infrastructure/database/client');
+describe('User Workflow Integration Tests', () => {
+  let createUserUseCase: CreateUserUseCase;
+  let getUserUseCase: GetUserUseCase;
+  let updateUserUseCase: UpdateUserUseCase;
+  
+  // In-memory storage for testing
+  const mockDatabase = new Map();
 
-describe('POST /api/users', () => {
-  it('should create a user', async () => {
-    const body = {
-      email: 'test@example.com',
-      name: 'Test User',
-    };
-
-    const request = new NextRequest('http://localhost:3000/api/users', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-
-    const response = await POST(request);
-    const data = await response.json();
-
-    expect(response.status).toBe(201);
-    expect(data.email).toBe('test@example.com');
+  beforeEach(() => {
+    mockDatabase.clear();
+    // Setup mock repository with in-memory storage
+    // Initialize use cases with mock repository
   });
 
-  it('should return 400 for invalid data', async () => {
-    const body = {
-      email: 'invalid-email',
+  it('should handle full user lifecycle', async () => {
+    // Create user
+    const user = await createUserUseCase.execute({
+      email: 'test@example.com',
       name: 'Test User',
-    };
-
-    const request = new NextRequest('http://localhost:3000/api/users', {
-      method: 'POST',
-      body: JSON.stringify(body),
     });
 
-    const response = await POST(request);
+    // Retrieve user
+    const retrieved = await getUserUseCase.execute(user.id);
+    expect(retrieved?.email).toBe('test@example.com');
 
-    expect(response.status).toBe(400);
+    // Update user
+    await updateUserUseCase.execute(user.id, { name: 'Updated Name' });
+    
+    // Verify update
+    const updated = await getUserUseCase.execute(user.id);
+    expect(updated?.name).toBe('Updated Name');
   });
 });
 ```
@@ -296,44 +291,42 @@ describe('POST /api/users', () => {
 Test React components using Testing Library:
 
 ```typescript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { LoginForm } from '@/components/LoginForm';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { SignInForm } from '@/components/auth/SignInForm';
 
-describe('LoginForm', () => {
-  it('should render login form', () => {
-    render(<LoginForm />);
+// Mock dependencies
+vi.mock('@/lib/auth/client', () => ({
+  authClient: {
+    signIn: {
+      email: vi.fn(),
+    },
+  },
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
+describe('SignInForm', () => {
+  it('should render sign-in form', () => {
+    render(<SignInForm />);
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it('should call onSubmit with form data', async () => {
-    const onSubmit = jest.fn();
-    render(<LoginForm onSubmit={onSubmit} />);
+  it('should require all fields', () => {
+    render(<SignInForm />);
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const submitButton = screen.getByRole('button', { name: /sign in/i });
+    const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+    const passwordInput = screen.getByLabelText(/password/i) as HTMLInputElement;
 
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(submitButton);
-
-    expect(onSubmit).toHaveBeenCalledWith({
-      email: 'test@example.com',
-      password: 'password123',
-    });
-  });
-
-  it('should display validation errors', async () => {
-    render(<LoginForm />);
-
-    const submitButton = screen.getByRole('button', { name: /sign in/i });
-    fireEvent.click(submitButton);
-
-    expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
-    expect(await screen.findByText(/password is required/i)).toBeInTheDocument();
+    expect(emailInput.required).toBe(true);
+    expect(passwordInput.required).toBe(true);
   });
 });
 ```
@@ -358,7 +351,7 @@ it('should do something', async () => {
 });
 ```
 
-### Mock Pattern
+### Mock Pattern with Vitest
 
 Create reusable mock factories:
 
@@ -378,6 +371,26 @@ export const createMockUser = (overrides = {}) => ({
 
 // Usage in tests
 const user = createMockUser({ email: 'custom@example.com' });
+```
+
+### Mocking Modules
+
+```typescript
+import { vi } from 'vitest';
+
+// Mock entire module
+vi.mock('@/lib/auth/client', () => ({
+  authClient: {
+    signIn: { email: vi.fn() },
+    signUp: { email: vi.fn() },
+  },
+}));
+
+// Mock specific functions
+const mockPush = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
 ```
 
 ### Test Data Builders
@@ -419,48 +432,47 @@ const user = new UserBuilder()
   .build();
 ```
 
-## Testing Database
+## Testing Strategy
 
-### Test Database Setup
+### Unit Tests
 
-Use a separate test database:
+Test individual functions and use cases in isolation with mocked dependencies:
+- Use case logic
+- Domain validation
+- Utility functions
 
-```bash
-# .env.test
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/appdb_test
-```
+### Component Tests
 
-### Database Cleanup
+Test React components with Testing Library:
+- Form validation
+- User interactions
+- Conditional rendering
+- Props handling
 
-Clean database between tests:
+### Integration Tests
+
+Test complete workflows with in-memory storage:
+- User lifecycle (create, read, update)
+- Multi-step processes
+- Cross-layer interactions
+- Error handling flows
+
+### In-Memory Testing
+
+For integration tests, use in-memory mock repositories:
 
 ```typescript
-beforeEach(async () => {
-  // Clean all tables
-  await db.delete(users);
-  await db.delete(rolePermissions);
-  await db.delete(roles);
-  await db.delete(permissions);
-  // ... other tables
-});
-```
+const mockDatabase = new Map<string, any>();
 
-### Transactions
-
-Use transactions for test isolation:
-
-```typescript
-let testDb: Database;
-
-beforeEach(async () => {
-  // Start transaction
-  testDb = await db.transaction();
-});
-
-afterEach(async () => {
-  // Rollback transaction
-  await testDb.rollback();
-});
+const mockRepository = {
+  findById: vi.fn(async (id) => mockDatabase.get(id) || null),
+  create: vi.fn(async (data) => {
+    const id = String(Date.now());
+    const entity = { id, ...data };
+    mockDatabase.set(id, entity);
+    return entity;
+  }),
+};
 ```
 
 ## Continuous Integration
@@ -537,10 +549,16 @@ npm run test -- --coverage
 
 ## Debugging Tests
 
-### Run Single Test
+### Run Single Test File
 
 ```bash
-npm run test -- --testNamePattern="should create a user"
+npm run test -- create-user.test.ts
+```
+
+### Run Tests Matching Pattern
+
+```bash
+npm run test -- -t "should create a user"
 ```
 
 ### Debug in VS Code
@@ -551,22 +569,32 @@ Add to `.vscode/launch.json`:
 {
   "type": "node",
   "request": "launch",
-  "name": "Jest Debug",
-  "program": "${workspaceFolder}/node_modules/.bin/jest",
-  "args": ["--runInBand"],
+  "name": "Vitest Debug",
+  "runtimeExecutable": "npm",
+  "runtimeArgs": ["run", "test:watch"],
   "console": "integratedTerminal",
   "internalConsoleOptions": "neverOpen"
 }
 ```
 
+### Use Vitest UI
+
+The UI provides an interactive way to run and debug tests:
+
+```bash
+npm run test:ui
+```
+
 ### Verbose Output
 
 ```bash
-npm run test -- --verbose
+npm run test -- --reporter=verbose
 ```
 
-### Show Console Logs
+## Vitest Benefits
 
-```bash
-npm run test -- --silent=false
-```
+- **Fast** - Native ESM support and smart test re-running
+- **Compatible** - Jest-like API for easy migration
+- **Modern** - Built for modern JavaScript/TypeScript projects
+- **UI** - Beautiful browser-based test runner
+- **Coverage** - Built-in coverage with v8

@@ -6,8 +6,11 @@ This is a NextJS Full Stack App Template repository designed to provide a starti
 ## Development Guidelines
 
 ### Technology Stack
-- **Framework**: Next.js
+- **Framework**: Next.js 16 with App Router
 - **Language**: TypeScript/JavaScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Better Auth for email/password authentication
+- **Testing**: Vitest with Testing Library
 - **Type**: Full-stack web application template
 
 ### Code Style and Standards
@@ -30,9 +33,14 @@ This is a NextJS Full Stack App Template repository designed to provide a starti
 - Handle errors gracefully with proper error boundaries
 
 ### Testing
-- Write tests for critical functionality
+- Use Vitest as the testing framework (not Jest)
+- Write comprehensive unit, component, and integration tests
+- Use Testing Library for component testing
+- Mock external dependencies with vi.fn() from Vitest
+- Write tests for critical functionality including use cases and domain logic
 - Ensure components are testable and follow best practices
 - Test both client and server-side code when applicable
+- Use in-memory mocks for integration tests
 
 ### Dependencies
 - Keep dependencies up to date
