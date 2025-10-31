@@ -460,6 +460,24 @@ const repo = new UserRepository(db);
 - Structured logging
 - Error tracking (Sentry)
 - Performance metrics (APM)
+- Audit logging (see [Audit Logging documentation](./audit-logging.md))
+
+## Audit Logging
+
+The application includes comprehensive audit logging to track all database operations. Every create, update, delete, and restore operation is automatically logged with:
+
+- What changed (old values vs new values)
+- Who made the change (actor ID)
+- When it happened (timestamp)
+- Context (metadata like IP address, request ID, etc.)
+
+**Key Features**:
+- Immutable audit trail for compliance
+- Detailed change tracking for debugging
+- Support for data recovery by examining historical states
+- Follows functional DDD principles (logging in controller layer)
+
+For detailed information, see the [Audit Logging documentation](./audit-logging.md).
 
 ## Adding New Features
 

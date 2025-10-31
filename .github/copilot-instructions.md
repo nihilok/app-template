@@ -271,3 +271,150 @@ export async function POST(request: NextRequest) {
 ```
 
 For more details, see [Permission Checking Documentation](../docs/permission-checking.md).
+
+### Audit Logging in Controllers
+
+Controllers are responsible for logging all database operations for compliance and debugging. This is part of the Imperative Shell's coordination role.
+
+**Pattern**:
+```typescript
+import { AuditLogger } from '@/lib/audit-logger';
+import { AuditLogRepository } from '@/infrastructure/repositories/audit-log.repository';
+
+export class EntityController {
+  private readonly permissionChecker: PermissionChecker;
+  private readonly auditLogger: AuditLogger;
+
+  constructor(
+    repository?: EntityRepository,
+    useCase?: UseCase,
+    permissionChecker?: PermissionChecker,
+    auditLogger?: AuditLogger
+  ) {
+    this.repository = repository || new EntityRepository(db);
+    this.useCase = useCase || new UseCase(this.repository);
+    this.permissionChecker = permissionChecker || new PermissionChecker();
+    
+    const auditLogRepository = new AuditLogRepository(db);
+    this.auditLogger = auditLogger || new AuditLogger(auditLogRepository);
+  }
+
+  async createEntity(actorId: string, input: CreateInput): Promise<Entity> {
+    // 1. Check permission
+    await this.permissionChecker.require(actorId, 'entities', 'write');
+    
+    // 2. Execute business logic
+    const entity = await this.useCase.execute(input);
+    
+    // 3. Log the operation (Imperative Shell responsibility)
+    await this.auditLogger.logCreate(
+      'entity',
+      entity.id,
+      actorId,
+      this.sanitizeEntityForAudit(entity)
+    );
+    
+    return entity;
+  }
+
+  async updateEntity(actorId: string, id: string, input: UpdateInput): Promise<Entity | null> {
+    await this.permissionChecker.require(actorId, 'entities', 'write');
+    
+    // Get old values BEFORE update for audit trail
+    const oldEntity = await this.repository.findById(id);
+    
+    const updatedEntity = await this.useCase.execute(id, input);
+    
+    // Log with both old and new values
+    if (updatedEntity && oldEntity) {
+      await this.auditLogger.logUpdate(
+        'entity',
+        updatedEntity.id,
+        actorId,
+        this.sanitizeEntityForAudit(oldEntity),
+        this.sanitizeEntityForAudit(updatedEntity)
+      );
+    }
+    
+    return updatedEntity;
+  }
+
+  async deleteEntity(actorId: string, id: string): Promise<Entity | null> {
+    await this.permissionChecker.require(actorId, 'entities', 'delete');
+    
+    // Get old values BEFORE delete for audit trail
+    const oldEntity = await this.repository.findById(id);
+    
+    const deletedEntity = await this.useCase.execute(id);
+    
+    if (deletedEntity && oldEntity) {
+      await this.auditLogger.logDelete(
+        'entity',
+        deletedEntity.id,
+        actorId,
+        this.sanitizeEntityForAudit(oldEntity)
+      );
+    }
+    
+    return deletedEntity;
+  }
+
+  // Sanitize data before logging - remove sensitive fields
+  private sanitizeEntityForAudit(entity: Entity): Record<string, unknown> {
+    return {
+      id: entity.id,
+      name: entity.name,
+      // Don't log passwords, tokens, credit cards, etc.
+      createdAt: entity.createdAt?.toISOString(),
+      updatedAt: entity.updatedAt?.toISOString(),
+    };
+  }
+}
+```
+
+**Audit Logging Guidelines**:
+- ✅ Log all CREATE, UPDATE, DELETE, RESTORE operations
+- ✅ Always sanitize data before logging (remove passwords, tokens, sensitive PII)
+- ✅ Fetch old values BEFORE update/delete operations
+- ✅ Log in controllers (Imperative Shell), not use cases (Functional Core)
+- ✅ Include actorId to track who made changes
+- ✅ Use metadata field for additional context (IP, user agent, etc.)
+- ✅ Mock audit logger in tests for dependency injection
+- ❌ Don't log READ operations (except for sensitive data)
+- ❌ Don't log raw entity data without sanitization
+- ❌ Don't skip logging on successful operations
+
+**Testing Audit Logging**:
+```typescript
+describe('EntityController', () => {
+  let mockAuditLogger: { logCreate: ReturnType<typeof vi.fn> };
+
+  beforeEach(() => {
+    mockAuditLogger = {
+      logCreate: vi.fn().mockResolvedValue(undefined),
+      logUpdate: vi.fn().mockResolvedValue(undefined),
+      logDelete: vi.fn().mockResolvedValue(undefined),
+    };
+
+    controller = new EntityController(
+      mockRepository,
+      mockUseCase,
+      mockPermissionChecker,
+      mockAuditLogger as unknown as AuditLogger
+    );
+  });
+
+  it('should log entity creation', async () => {
+    await controller.createEntity(actorId, input);
+
+    expect(mockAuditLogger.logCreate).toHaveBeenCalledWith(
+      'entity',
+      expect.any(String),
+      actorId,
+      expect.objectContaining({ name: input.name })
+    );
+  });
+});
+```
+
+For more details, see [Audit Logging Documentation](../docs/audit-logging.md).
