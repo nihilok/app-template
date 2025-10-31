@@ -156,6 +156,7 @@ export class EntityController {
 - ✅ Manage transaction boundaries
 - ✅ Use dependency injection for testability
 - ✅ Keep methods focused on coordination
+- ✅ Enforce RBAC permissions before operations
 
 **DON'T**:
 - ❌ Include business logic (that's for use cases)
@@ -164,3 +165,109 @@ export class EntityController {
 - ❌ Calculate derived values (use cases calculate)
 
 **Remember**: Controllers take actions, Use Cases make decisions.
+
+### Permission Checking in Controllers
+
+Controllers are responsible for enforcing RBAC permissions before executing operations. This is part of the Imperative Shell's coordination role.
+
+**Pattern**:
+```typescript
+import { PermissionChecker } from '@/lib/permissions';
+
+export class EntityController {
+  private readonly permissionChecker: PermissionChecker;
+
+  constructor(
+    repository?: EntityRepository,
+    useCase?: UseCase,
+    permissionChecker?: PermissionChecker
+  ) {
+    this.repository = repository || new EntityRepository(db);
+    this.useCase = useCase || new UseCase(this.repository);
+    this.permissionChecker = permissionChecker || new PermissionChecker();
+  }
+
+  async operation(actorId: string, input: Input): Promise<Output> {
+    // 1. Check permission (Imperative Shell responsibility)
+    await this.permissionChecker.require(actorId, 'resource', 'action');
+    
+    // 2. Execute business logic (Functional Core)
+    return await this.useCase.execute(input);
+  }
+}
+```
+
+**Security Guidelines**:
+- ✅ Always pass `actorId` as the first parameter to controller methods
+- ✅ Use `permissionChecker.require()` to throw on denied access
+- ✅ Use generic "Forbidden" errors that don't leak information
+- ✅ Check permissions before any business logic or database queries
+- ✅ Test both authorized and unauthorized scenarios
+- ❌ Never reveal user existence, role structure, or permission details in errors
+- ❌ Don't skip permission checks even for "read" operations
+
+**Permission Naming Convention**: Use `resource:action` format
+- Resources: `users`, `reports`, `settings`, `orders`, etc.
+- Actions: `read`, `write`, `delete`, `manage`, etc.
+- Examples: `users:read`, `users:write`, `users:delete`, `reports:manage`
+
+**Common Patterns**:
+```typescript
+// Read operation
+async getEntity(actorId: string, id: string): Promise<Entity | null> {
+  await this.permissionChecker.require(actorId, 'entities', 'read');
+  return await this.useCase.execute(id);
+}
+
+// Write operation (create/update)
+async createEntity(actorId: string, input: CreateInput): Promise<Entity> {
+  await this.permissionChecker.require(actorId, 'entities', 'write');
+  return await this.useCase.execute(input);
+}
+
+// Delete operation
+async deleteEntity(actorId: string, id: string): Promise<Entity | null> {
+  await this.permissionChecker.require(actorId, 'entities', 'delete');
+  return await this.useCase.execute(id);
+}
+
+// Multiple permissions (requires all)
+async complexOperation(actorId: string, input: Input): Promise<Result> {
+  const hasAll = await this.permissionChecker.hasAll(actorId, [
+    { resource: 'users', action: 'read' },
+    { resource: 'reports', action: 'write' },
+  ]);
+  if (!hasAll) throw new Error('Forbidden');
+  return await this.useCase.execute(input);
+}
+```
+
+**API Route Pattern with Permission Checks**:
+```typescript
+export async function POST(request: NextRequest) {
+  try {
+    // 1. Authenticate
+    const session = await getSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. Validate input
+    const body = await request.json();
+    const validatedData = CreateSchema.parse(body);
+
+    // 3. Execute (includes permission check)
+    const controller = new EntityController();
+    const result = await controller.createEntity(session.user.id, validatedData);
+
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Forbidden') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    // Handle other errors...
+  }
+}
+```
+
+For more details, see [Permission Checking Documentation](../docs/permission-checking.md).
