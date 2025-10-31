@@ -6,6 +6,7 @@ import { GetUserUseCase } from '@/use-cases/user/get-user.use-case';
 import { UpdateUserUseCase } from '@/use-cases/user/update-user.use-case';
 import { DeleteUserUseCase } from '@/use-cases/user/delete-user.use-case';
 import { PermissionChecker } from '@/lib/permissions';
+import { AuditLogger } from '@/lib/audit-logger';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -15,6 +16,7 @@ describe('UserController', () => {
   let mockUpdateUserUseCase: UpdateUserUseCase;
   let mockDeleteUserUseCase: DeleteUserUseCase;
   let mockPermissionChecker: PermissionChecker;
+  let mockAuditLogger: { logCreate: ReturnType<typeof vi.fn>, logUpdate: ReturnType<typeof vi.fn>, logDelete: ReturnType<typeof vi.fn> };
 
   const mockUser = {
     id: '123',
@@ -66,6 +68,12 @@ describe('UserController', () => {
       hasAny: vi.fn(),
     } as unknown as PermissionChecker;
 
+    mockAuditLogger = {
+      logCreate: vi.fn(),
+      logUpdate: vi.fn(),
+      logDelete: vi.fn(),
+    };
+
     // Inject mocks via constructor
     controller = new UserController(
       mockUserRepository,
@@ -73,7 +81,8 @@ describe('UserController', () => {
       mockGetUserUseCase,
       mockUpdateUserUseCase,
       mockDeleteUserUseCase,
-      mockPermissionChecker
+      mockPermissionChecker,
+      mockAuditLogger as unknown as AuditLogger
     );
   });
 
@@ -86,6 +95,7 @@ describe('UserController', () => {
 
       vi.mocked(mockPermissionChecker.require).mockResolvedValue(undefined);
       vi.mocked(mockCreateUserUseCase.execute).mockResolvedValue(mockUser);
+      mockAuditLogger.logCreate.mockResolvedValue(undefined);
 
       const result = await controller.createUser(actorId, input);
 
@@ -96,6 +106,16 @@ describe('UserController', () => {
       );
       expect(result).toEqual(mockUser);
       expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith(input);
+      expect(mockAuditLogger.logCreate).toHaveBeenCalledWith(
+        'user',
+        mockUser.id,
+        actorId,
+        expect.objectContaining({
+          id: mockUser.id,
+          email: mockUser.email,
+          name: mockUser.name,
+        })
+      );
     });
 
     it('should throw Forbidden error when actor lacks permission', async () => {
@@ -227,7 +247,9 @@ describe('UserController', () => {
       const updatedUser = { ...mockUser, name: 'Updated Name' };
 
       vi.mocked(mockPermissionChecker.require).mockResolvedValue(undefined);
+      vi.mocked(mockUserRepository.findById).mockResolvedValue(mockUser);
       vi.mocked(mockUpdateUserUseCase.execute).mockResolvedValue(updatedUser);
+      mockAuditLogger.logUpdate.mockResolvedValue(undefined);
 
       const result = await controller.updateUser(actorId, userId, input);
 
@@ -238,6 +260,13 @@ describe('UserController', () => {
       );
       expect(result).toEqual(updatedUser);
       expect(mockUpdateUserUseCase.execute).toHaveBeenCalledWith(userId, input);
+      expect(mockAuditLogger.logUpdate).toHaveBeenCalledWith(
+        'user',
+        updatedUser.id,
+        actorId,
+        expect.objectContaining({ id: mockUser.id, email: mockUser.email }),
+        expect.objectContaining({ id: updatedUser.id, name: 'Updated Name' })
+      );
     });
 
     it('should throw Forbidden error when actor lacks permission', async () => {
@@ -261,7 +290,9 @@ describe('UserController', () => {
       const deletedUser = { ...mockUser, deletedAt: new Date() };
 
       vi.mocked(mockPermissionChecker.require).mockResolvedValue(undefined);
+      vi.mocked(mockUserRepository.findById).mockResolvedValue(mockUser);
       vi.mocked(mockDeleteUserUseCase.execute).mockResolvedValue(deletedUser);
+      mockAuditLogger.logDelete.mockResolvedValue(undefined);
 
       const result = await controller.deleteUser(actorId, userId);
 
@@ -272,6 +303,12 @@ describe('UserController', () => {
       );
       expect(result).toEqual(deletedUser);
       expect(mockDeleteUserUseCase.execute).toHaveBeenCalledWith(userId);
+      expect(mockAuditLogger.logDelete).toHaveBeenCalledWith(
+        'user',
+        deletedUser.id,
+        actorId,
+        expect.objectContaining({ id: mockUser.id, email: mockUser.email })
+      );
     });
 
     it('should throw Forbidden error when actor lacks permission', async () => {
