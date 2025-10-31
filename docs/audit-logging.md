@@ -54,8 +54,8 @@ class AuditLogRepository {
   create(data: NewAuditLog): Promise<AuditLog>
   findByEntity(entityType: string, entityId: string): Promise<AuditLog[]>
   findByActor(actorId: string): Promise<AuditLog[]>
-  findByOperation(operation: string): Promise<AuditLog[]>
-  findAll(limit?: number, offset?: number): Promise<AuditLog[]>
+  findByOperation(operation: AuditOperation): Promise<AuditLog[]>
+  findAll(limit?: number, offset?: number): Promise<AuditLog[]> // max limit: 1000
   findById(id: string): Promise<AuditLog | null>
 }
 ```
@@ -65,6 +65,11 @@ class AuditLogRepository {
 - Audit logs should never be deleted (soft or hard)
 - They have different query patterns (time-based, entity-based)
 
+**Key Features**:
+- Type-safe operation queries using `AuditOperation` enum
+- Input validation on `limit` (max 1000) and `offset` (non-negative)
+- Pagination support with safe defaults
+
 ### 3. Service Layer
 
 **Location**: `src/lib/audit-logger.ts`
@@ -73,7 +78,7 @@ The `AuditLogger` service provides a convenient API for creating audit logs:
 
 ```typescript
 class AuditLogger {
-  // Generic logging method
+  // Generic logging method with validation
   log(params: {
     operation: AuditOperation;
     entityType: string;
@@ -92,6 +97,11 @@ class AuditLogger {
   logRead(entityType, entityId, actorId, metadata?)
 }
 ```
+
+**Key Features**:
+- Validates that `entityType`, `entityId`, and `actorId` are non-empty
+- Automatically trims whitespace from string parameters
+- Throws descriptive errors for invalid inputs
 
 ## Integration with Controllers
 

@@ -289,14 +289,15 @@ export class EntityController {
     repository?: EntityRepository,
     useCase?: UseCase,
     permissionChecker?: PermissionChecker,
-    auditLogger?: AuditLogger
+    auditLogger?: AuditLogger,
+    auditLogRepository?: AuditLogRepository
   ) {
     this.repository = repository || new EntityRepository(db);
     this.useCase = useCase || new UseCase(this.repository);
     this.permissionChecker = permissionChecker || new PermissionChecker();
     
-    const auditLogRepository = new AuditLogRepository(db);
-    this.auditLogger = auditLogger || new AuditLogger(auditLogRepository);
+    const auditLogRepo = auditLogRepository || new AuditLogRepository(db);
+    this.auditLogger = auditLogger || new AuditLogger(auditLogRepo);
   }
 
   async createEntity(actorId: string, input: CreateInput): Promise<Entity> {

@@ -295,5 +295,69 @@ describe('AuditLogger', () => {
       });
       expect(result).toEqual(expectedLog);
     });
+
+    it('should throw error for empty entityType', async () => {
+      await expect(
+        auditLogger.log({
+          operation: 'CREATE',
+          entityType: '',
+          entityId,
+          actorId,
+        })
+      ).rejects.toThrow('entityType cannot be empty');
+    });
+
+    it('should throw error for empty entityId', async () => {
+      await expect(
+        auditLogger.log({
+          operation: 'CREATE',
+          entityType,
+          entityId: '',
+          actorId,
+        })
+      ).rejects.toThrow('entityId cannot be empty');
+    });
+
+    it('should throw error for empty actorId', async () => {
+      await expect(
+        auditLogger.log({
+          operation: 'CREATE',
+          entityType,
+          entityId,
+          actorId: '',
+        })
+      ).rejects.toThrow('actorId cannot be empty');
+    });
+
+    it('should trim whitespace from parameters', async () => {
+      const expectedLog = {
+        id: 'log-123',
+        operation: 'CREATE',
+        entityType: 'user',
+        entityId: 'entity-456',
+        actorId: 'actor-123',
+        oldValues: null,
+        newValues: null,
+        metadata: null,
+        timestamp: new Date(),
+      };
+
+      vi.mocked(mockRepository.create).mockResolvedValue(expectedLog);
+
+      await auditLogger.log({
+        operation: 'CREATE',
+        entityType: '  user  ',
+        entityId: '  entity-456  ',
+        actorId: '  actor-123  ',
+      });
+
+      expect(mockRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          entityType: 'user',
+          entityId: 'entity-456',
+          actorId: 'actor-123',
+        })
+      );
+    });
   });
 });

@@ -32,6 +32,7 @@ export class AuditLogger {
    * 
    * @param params - Audit log parameters
    * @returns Created audit log entry
+   * @throws Error if entityType or entityId are empty
    */
   async log(params: {
     operation: AuditOperation;
@@ -42,11 +43,22 @@ export class AuditLogger {
     newValues?: Record<string, unknown> | null;
     metadata?: Record<string, unknown> | null;
   }) {
+    // Validate required parameters
+    if (!params.entityType || params.entityType.trim() === '') {
+      throw new Error('entityType cannot be empty');
+    }
+    if (!params.entityId || params.entityId.trim() === '') {
+      throw new Error('entityId cannot be empty');
+    }
+    if (!params.actorId || params.actorId.trim() === '') {
+      throw new Error('actorId cannot be empty');
+    }
+
     const auditLogData: NewAuditLog = {
       operation: params.operation,
-      entityType: params.entityType,
-      entityId: params.entityId,
-      actorId: params.actorId,
+      entityType: params.entityType.trim(),
+      entityId: params.entityId.trim(),
+      actorId: params.actorId.trim(),
       oldValues: params.oldValues ?? null,
       newValues: params.newValues ?? null,
       metadata: params.metadata ?? null,

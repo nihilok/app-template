@@ -1,6 +1,7 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { auditLogs, AuditLog, NewAuditLog } from '../database/schema/audit-logs';
 import { Database } from '../database/client';
+import { AuditOperation } from '@/lib/audit-logger';
 
 /**
  * AuditLogRepository
@@ -69,7 +70,7 @@ export class AuditLogRepository {
    * @param operation - Operation type (e.g., 'CREATE', 'UPDATE', 'DELETE')
    * @returns Array of audit logs for the operation
    */
-  async findByOperation(operation: string): Promise<AuditLog[]> {
+  async findByOperation(operation: AuditOperation): Promise<AuditLog[]> {
     return await this.db
       .select()
       .from(auditLogs)
@@ -80,17 +81,22 @@ export class AuditLogRepository {
   /**
    * Get all audit logs (with pagination)
    * 
-   * @param limit - Maximum number of logs to return
-   * @param offset - Number of logs to skip
+   * @param limit - Maximum number of logs to return (default: 100, max: 1000)
+   * @param offset - Number of logs to skip (default: 0)
    * @returns Array of audit logs
    */
   async findAll(limit = 100, offset = 0): Promise<AuditLog[]> {
+    // Validate and clamp limit and offset
+    const MAX_LIMIT = 1000;
+    const safeLimit = Math.max(1, Math.min(Number(limit) || 100, MAX_LIMIT));
+    const safeOffset = Math.max(0, Number(offset) || 0);
+
     return await this.db
       .select()
       .from(auditLogs)
       .orderBy(desc(auditLogs.timestamp))
-      .limit(limit)
-      .offset(offset);
+      .limit(safeLimit)
+      .offset(safeOffset);
   }
 
   /**

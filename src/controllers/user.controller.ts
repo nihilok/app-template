@@ -45,11 +45,12 @@ export class UserController {
     updateUserUseCase?: UpdateUserUseCase,
     deleteUserUseCase?: DeleteUserUseCase,
     permissionChecker?: PermissionChecker,
-    auditLogger?: AuditLogger
+    auditLogger?: AuditLogger,
+    auditLogRepository?: AuditLogRepository
   ) {
     // Initialize infrastructure dependencies (or use injected ones for testing)
     this.userRepository = userRepository || new UserRepository(db);
-    const auditLogRepository = new AuditLogRepository(db);
+    const auditLogRepo = auditLogRepository || new AuditLogRepository(db);
     
     // Initialize use cases with their dependencies (or use injected ones for testing)
     this.createUserUseCase = createUserUseCase || new CreateUserUseCase(this.userRepository);
@@ -61,7 +62,7 @@ export class UserController {
     this.permissionChecker = permissionChecker || new PermissionChecker();
     
     // Initialize audit logger (or use injected one for testing)
-    this.auditLogger = auditLogger || new AuditLogger(auditLogRepository);
+    this.auditLogger = auditLogger || new AuditLogger(auditLogRepo);
   }
 
   /**
