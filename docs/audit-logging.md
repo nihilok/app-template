@@ -39,7 +39,8 @@ The `audit_logs` table stores immutable records of all database operations:
 **Key Design Decisions**:
 - Audit logs are **immutable** - they can never be updated or deleted
 - JSONB columns store flexible data structures for old/new values
-- Foreign key to users table with CASCADE delete (if user is deleted, their audit logs are too)
+- Foreign key to users table with **SET NULL** on delete (preserves audit logs even when users are deleted)
+- Actor ID becomes null when user is deleted, maintaining the audit trail for compliance
 - No soft delete on audit logs - they're permanent records
 
 ### 2. Repository Layer
@@ -447,7 +448,10 @@ For high-throughput systems, consider making audit logging asynchronous:
 - Be mindful of data retention laws (GDPR, CCPA, etc.)
 - Implement retention policies
 - Provide mechanisms for users to request their audit history
-- Support "right to be forgotten" (delete logs when user deleted)
+- **Audit Trail Preservation**: When a user is deleted, their audit logs are preserved with `actorId` set to NULL
+  - This maintains compliance by keeping the audit trail intact
+  - The logs still show what changed and when, just not who (since user was deleted)
+  - This balances "right to be forgotten" with regulatory compliance requirements
 
 ## Testing
 

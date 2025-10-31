@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS "audit_logs" (
 	"operation" text NOT NULL,
 	"entity_type" text NOT NULL,
 	"entity_id" text NOT NULL,
-	"actor_id" uuid NOT NULL,
+	"actor_id" uuid,
 	"old_values" jsonb,
 	"new_values" jsonb,
 	"metadata" jsonb,
@@ -145,7 +145,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_id_users_id_fk" FOREIGN KEY ("actor_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_actor_id_users_id_fk" FOREIGN KEY ("actor_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

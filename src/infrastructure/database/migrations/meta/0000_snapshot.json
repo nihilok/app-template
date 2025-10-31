@@ -1,5 +1,5 @@
 {
-  "id": "53300dc0-4c03-43a7-923e-5c8025263ec2",
+  "id": "99903451-e3e9-4671-a3cd-a6e86ff836ad",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -673,7 +673,7 @@
           "name": "actor_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "old_values": {
           "name": "old_values",
@@ -713,7 +713,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },

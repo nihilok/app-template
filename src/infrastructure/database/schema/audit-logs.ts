@@ -24,9 +24,10 @@ export const auditLogs = pgTable('audit_logs', {
   entityId: text('entity_id').notNull(), // ID of the affected entity
   
   // Who performed the action
+  // Note: Using SET NULL to preserve audit logs even if user is deleted
+  // This ensures immutable audit trail for compliance
   actorId: uuid('actor_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => users.id, { onDelete: 'set null' }),
   
   // What changed - stored as JSONB for flexibility
   oldValues: jsonb('old_values'), // Previous state (null for CREATE)
