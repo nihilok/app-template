@@ -333,6 +333,28 @@ No layer should depend on layers above it.
 - Calculating derived values → Use Cases
 - Making business decisions → Use Cases
 
+### Simple Queries: Use Case or Direct Repository?
+
+For **simple data retrieval** with no business logic:
+- ✅ **Direct repository call** - When it's just fetching data (e.g., `findAll()`, `findById()`)
+- ✅ **Use case** - When there's any business logic, filtering, or transformation
+
+For **operations with business logic**:
+- ✅ **Always use a use case** - Create, update, delete operations typically have business rules
+
+Example:
+```typescript
+// Simple query - OK to call repository directly
+async getAllUsers(): Promise<User[]> {
+  return await this.userRepository.findAll();
+}
+
+// Has business logic - use a use case
+async createUser(input: CreateUserInput): Promise<User> {
+  return await this.createUserUseCase.execute(input);
+}
+```
+
 Remember: **Controllers take actions, Use Cases make decisions.**
 
 ## Additional Resources

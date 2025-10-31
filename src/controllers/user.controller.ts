@@ -57,6 +57,10 @@ export class UserController {
   /**
    * Get all users
    * Coordinates: repository query
+   * 
+   * Note: This directly calls the repository without a use case because
+   * there's no business logic involved - it's a simple data retrieval.
+   * Use cases are only needed when there are business rules to enforce.
    */
   async getAllUsers(): Promise<User[]> {
     return await this.userRepository.findAll();
