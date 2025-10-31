@@ -154,12 +154,15 @@ export class PermissionChecker {
    * 
    * @param userId - The user ID to check
    * @param checks - Array of {resource, action} pairs
-   * @returns true only if user has ALL permissions
+   * @returns true only if user has ALL permissions, false if checks array is empty
    */
   async hasAll(
     userId: string,
     checks: Array<{ resource: string; action: string }>
   ): Promise<boolean> {
+    // Guard against empty array - requiring "all" of zero permissions should be false
+    if (checks.length === 0) return false;
+    
     const results = await this.checkMultiple(userId, checks);
     return Object.values(results).every((hasPermission) => hasPermission);
   }
@@ -169,12 +172,15 @@ export class PermissionChecker {
    * 
    * @param userId - The user ID to check
    * @param checks - Array of {resource, action} pairs
-   * @returns true if user has at least one permission
+   * @returns true if user has at least one permission, false if checks array is empty
    */
   async hasAny(
     userId: string,
     checks: Array<{ resource: string; action: string }>
   ): Promise<boolean> {
+    // Guard against empty array - having "any" of zero permissions should be false
+    if (checks.length === 0) return false;
+    
     const results = await this.checkMultiple(userId, checks);
     return Object.values(results).some((hasPermission) => hasPermission);
   }

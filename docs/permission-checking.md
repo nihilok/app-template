@@ -234,7 +234,9 @@ Examples:
 The permission checker always performs the full check regardless of the outcome, ensuring consistent timing:
 
 ```typescript
-// ✅ Good - Always performs full check
+// ✅ Good - Always performs full check without short-circuiting
+// Implementation uses full iteration instead of Array.some() to prevent
+// timing information leakage based on permission position
 const hasPermission = await checker.check(userId, 'users', 'write');
 if (!hasPermission) {
   throw new Error('Forbidden');
@@ -242,6 +244,9 @@ if (!hasPermission) {
 
 // ❌ Bad - Early return could leak timing information
 if (!userExists) return false; // Don't do this in permission logic
+
+// ❌ Bad - Short-circuiting methods like some() leak timing
+const hasPermission = permissions.some(p => p.matches()); // Don't do this
 ```
 
 ### 2. Enumeration Attack Prevention
@@ -390,10 +395,14 @@ async deleteResource(actorId: string, id: string): Promise<Resource | null> {
 ```typescript
 async complexOperation(actorId: string, input: Input): Promise<Result> {
   // Require all permissions
-  await this.permissionChecker.hasAll(actorId, [
+  const hasAll = await this.permissionChecker.hasAll(actorId, [
     { resource: 'users', action: 'read' },
     { resource: 'reports', action: 'write' },
   ]);
+  
+  if (!hasAll) {
+    throw new Error('Forbidden');
+  }
   
   return await this.useCase.execute(input);
 }

@@ -33,11 +33,15 @@ export class CheckPermissionUseCase {
     const userPermissions = await this.permissionRepository.getUserPermissions(userId);
 
     // Check if any permission matches the requested resource and action
-    // Using a simple iteration to maintain constant-time characteristics
-    const hasPermission = userPermissions.some(
-      (permission) =>
-        permission.resource === resource && permission.action === action
-    );
+    // Using full iteration (not short-circuiting) to maintain constant-time characteristics
+    // and prevent timing attacks based on permission position in the array
+    let hasPermission = false;
+    for (const permission of userPermissions) {
+      if (permission.resource === resource && permission.action === action) {
+        hasPermission = true;
+        // Continue iterating instead of breaking to maintain constant time
+      }
+    }
 
     return hasPermission;
   }

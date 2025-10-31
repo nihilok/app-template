@@ -239,6 +239,14 @@ describe('PermissionChecker', () => {
 
       expect(result).toBe(false);
     });
+
+    it('should return false for empty checks array', async () => {
+      const result = await permissionChecker.hasAll('user-123', []);
+
+      expect(result).toBe(false);
+      // Should not call checkMultiple for empty array
+      expect(mockCheckPermissionUseCase.checkMultiple).not.toHaveBeenCalled();
+    });
   });
 
   describe('hasAny', () => {
@@ -279,6 +287,14 @@ describe('PermissionChecker', () => {
 
       expect(result).toBe(false);
     });
+
+    it('should return false for empty checks array', async () => {
+      const result = await permissionChecker.hasAny('user-123', []);
+
+      expect(result).toBe(false);
+      // Should not call checkMultiple for empty array
+      expect(mockCheckPermissionUseCase.checkMultiple).not.toHaveBeenCalled();
+    });
   });
 
   describe('Security considerations', () => {
@@ -306,8 +322,12 @@ describe('PermissionChecker', () => {
         permissionChecker.require('user-123', 'users', 'read')
       ).rejects.toThrow('Forbidden');
 
-      // Verify that the error is logged but not exposed
-      expect(consoleErrorSpy).toHaveBeenCalled();
+      // Verify that check() caught the error and logged it internally
+      // require() then throws 'Forbidden' based on check() returning false
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Permission check error:',
+        expect.any(Error)
+      );
 
       consoleErrorSpy.mockRestore();
     });
