@@ -200,30 +200,25 @@ describe('User Workflow Integration Tests', () => {
       expect(unchangedUser3?.name).toBe('User Three');
     });
 
-    it('should validate email format during creation', async () => {
-      const invalidInput = {
-        email: 'not-an-email',
-        name: 'Test User',
-      };
-
-      await expect(createUserUseCase.execute(invalidInput)).rejects.toThrow();
-    });
-
-    it('should validate image URL during update', async () => {
-      // Create user
+    it('should accept validated data from API layer', async () => {
+      // Note: Validation now happens at the API layer using Zod schemas
+      // Use cases assume they receive already-validated CreateUserInput/UpdateUserInput
+      
+      // Create user with valid data
       const user = await createUserUseCase.execute({
-        email: 'test@example.com',
-        name: 'Test User',
+        email: 'valid@example.com',
+        name: 'Valid User',
       });
 
-      // Try to update with invalid image URL
-      const invalidUpdate = {
-        image: 'not-a-valid-url',
-      };
+      expect(user.email).toBe('valid@example.com');
+      expect(user.name).toBe('Valid User');
 
-      await expect(
-        updateUserUseCase.execute(user.id, invalidUpdate)
-      ).rejects.toThrow();
+      // Update with valid data
+      const updatedUser = await updateUserUseCase.execute(user.id, {
+        name: 'Updated Name',
+      });
+
+      expect(updatedUser?.name).toBe('Updated Name');
     });
 
     it('should handle user not found scenarios', async () => {

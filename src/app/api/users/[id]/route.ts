@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/infrastructure/database/client';
-import { UserRepository } from '@/infrastructure/repositories/user.repository';
-import { GetUserUseCase } from '@/use-cases/user/get-user.use-case';
-import { UpdateUserUseCase } from '@/use-cases/user/update-user.use-case';
-import { DeleteUserUseCase } from '@/use-cases/user/delete-user.use-case';
+import { UserController } from '@/controllers';
 import { UpdateUserSchema } from '@/domain/user.types';
 
 export async function GET(
@@ -12,9 +8,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const userRepository = new UserRepository(db);
-    const getUserUseCase = new GetUserUseCase(userRepository);
-    const user = await getUserUseCase.execute(id);
+    const controller = new UserController();
+    const user = await controller.getUserById(id);
     
     if (!user) {
       return NextResponse.json(
@@ -43,10 +38,9 @@ export async function PATCH(
     // Validate request body
     const validatedData = UpdateUserSchema.parse(body);
     
-    // Execute use case
-    const userRepository = new UserRepository(db);
-    const updateUserUseCase = new UpdateUserUseCase(userRepository);
-    const user = await updateUserUseCase.execute(id, validatedData);
+    // Execute via controller
+    const controller = new UserController();
+    const user = await controller.updateUser(id, validatedData);
     
     return NextResponse.json(user);
   } catch (error) {
@@ -69,9 +63,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const userRepository = new UserRepository(db);
-    const deleteUserUseCase = new DeleteUserUseCase(userRepository);
-    const user = await deleteUserUseCase.execute(id);
+    const controller = new UserController();
+    const user = await controller.deleteUser(id);
     
     return NextResponse.json(user);
   } catch (error) {

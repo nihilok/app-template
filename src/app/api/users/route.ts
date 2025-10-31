@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/infrastructure/database/client';
-import { UserRepository } from '@/infrastructure/repositories/user.repository';
-import { CreateUserUseCase } from '@/use-cases/user/create-user.use-case';
+import { UserController } from '@/controllers';
 import { CreateUserSchema } from '@/domain/user.types';
 
 export async function POST(request: NextRequest) {
@@ -11,10 +9,9 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validatedData = CreateUserSchema.parse(body);
     
-    // Execute use case
-    const userRepository = new UserRepository(db);
-    const createUserUseCase = new CreateUserUseCase(userRepository);
-    const user = await createUserUseCase.execute(validatedData);
+    // Execute via controller
+    const controller = new UserController();
+    const user = await controller.createUser(validatedData);
     
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
@@ -33,8 +30,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const userRepository = new UserRepository(db);
-    const users = await userRepository.findAll();
+    const controller = new UserController();
+    const users = await controller.getAllUsers();
     
     return NextResponse.json(users);
   } catch {
