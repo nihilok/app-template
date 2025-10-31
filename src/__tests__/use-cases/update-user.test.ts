@@ -62,7 +62,9 @@ describe('UpdateUserUseCase', () => {
     expect(mockUserRepository.updateUser).not.toHaveBeenCalled();
   });
 
-  it('should validate input data', async () => {
+  it('should accept validated input data', async () => {
+    // Note: Input validation now happens at the API layer using Zod schemas
+    // Use cases assume they receive already-validated data
     const existingUser = {
       id: '123',
       email: 'test@example.com',
@@ -74,16 +76,22 @@ describe('UpdateUserUseCase', () => {
       deletedAt: null,
     };
 
-    vi.mocked(mockUserRepository.findById).mockResolvedValue(existingUser);
-
-    // Invalid image URL
-    const invalidInput = {
-      image: 'not-a-valid-url',
+    const validInput = {
+      name: 'Updated Name',
     };
 
-    await expect(
-      updateUserUseCase.execute('123', invalidInput)
-    ).rejects.toThrow();
+    const updatedUser = {
+      ...existingUser,
+      name: 'Updated Name',
+    };
+
+    vi.mocked(mockUserRepository.findById).mockResolvedValue(existingUser);
+    vi.mocked(mockUserRepository.updateUser).mockResolvedValue(updatedUser);
+
+    const result = await updateUserUseCase.execute('123', validInput);
+
+    expect(result?.name).toBe('Updated Name');
+    expect(mockUserRepository.updateUser).toHaveBeenCalledWith('123', validInput);
   });
 
   it('should allow updating name only', async () => {

@@ -48,7 +48,8 @@ export class UserController {
 
   /**
    * Create a new user
-   * Coordinates: validation, uniqueness check, creation
+   * Coordinates: uniqueness check, creation
+   * Note: Input validation happens at the API layer
    */
   async createUser(input: CreateUserInput): Promise<User> {
     return await this.createUserUseCase.execute(input);
@@ -85,6 +86,7 @@ export class UserController {
   /**
    * Update a user
    * Coordinates: existence check, update operation
+   * Note: Input validation happens at the API layer
    */
   async updateUser(id: string, input: UpdateUserInput): Promise<User | null> {
     return await this.updateUserUseCase.execute(id, input);

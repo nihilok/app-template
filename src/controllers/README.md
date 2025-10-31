@@ -34,10 +34,10 @@ Business logic belongs in **Use Cases** (Functional Core), not Controllers.
 ┌─────────────────────────────────────────────┐
 │         API Layer (Next.js Routes)          │
 │  - HTTP request/response handling           │
-│  - Input validation (schema parsing)        │
+│  - Input validation (Zod schema parsing)    │
 │  - Response formatting                      │
 └─────────────────┬───────────────────────────┘
-                  │
+                  │ (validated input)
                   ▼
 ┌─────────────────────────────────────────────┐
 │         Controllers (Imperative Shell)       │
@@ -46,7 +46,7 @@ Business logic belongs in **Use Cases** (Functional Core), not Controllers.
 │  - Coordinate I/O                           │
 │  - Handle infrastructure concerns           │
 └─────────────────┬───────────────────────────┘
-                  │
+                  │ (validated input)
                   ▼
 ┌─────────────────────────────────────────────┐
 │         Use Cases (Functional Core)          │
@@ -62,6 +62,18 @@ Business logic belongs in **Use Cases** (Functional Core), not Controllers.
 │  - Database queries                         │
 └─────────────────────────────────────────────┘
 ```
+
+## Validation Strategy
+
+**Input Validation** (format, types, constraints):
+- ✅ Happens at the **API layer** using Zod schemas
+- Controllers and Use Cases receive already-validated typed input
+- Prevents duplicate validation across layers
+
+**Business Rules Validation** (domain logic):
+- ✅ Happens in **Use Cases**
+- Examples: "User email must be unique", "Order must have at least one item"
+- These are business constraints, not input format checks
 
 ## Controller Pattern
 
